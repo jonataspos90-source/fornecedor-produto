@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fornecedor Produto</title>
+<style>
+:root{--p:#6d28d9;--p2:#8b5cf6;--bg:#f5f3ff;--card:#fff;--line:#e5e7eb;--text:#1f2937;--muted:#6b7280;--ok:#15803d;--warn:#b45309}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Segoe UI,sans-serif;background:linear-gradient(135deg,#f5f3ff,#eff6ff);color:var(--text)}
+header{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;padding:20px 26px;box-shadow:0 8px 24px #6d28d933}
+header h1{margin:0 0 4px}main{max-width:1550px;margin:22px auto;padding:0 18px 40px}
+.card{background:var(--card);border:1px solid #ede9fe;border-radius:16px;padding:16px;box-shadow:0 8px 24px #4c1d9512;margin-bottom:16px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{border:1px solid #ddd;background:#fff;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}.tab.active{background:var(--p);color:#fff;border-color:var(--p)}
+.view{display:none}.view.active{display:block}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.field{min-width:210px;flex:1}.field label{font-size:12px;font-weight:700;display:block;margin-bottom:5px;color:#4b5563}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--p);color:#fff}.btn.secondary{background:#ede9fe;color:#5b21b6}.btn.ghost{background:#fff;border:1px solid var(--line)}
+.drop{border:2px dashed #a78bfa;border-radius:14px;padding:24px;text-align:center;background:#faf8ff}.drop.drag{background:#ede9fe}.status{margin-top:10px;color:var(--muted);font-size:13px}.status.ok{color:var(--ok)}.status.warn{color:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.stat{padding:12px;border:1px solid var(--line);border-radius:11px;background:#fafafa}.stat b{font-size:20px;color:#5b21b6;display:block}.stat span{font-size:12px;color:var(--muted)}
+.table-wrap{overflow:auto;max-height:63vh;border:1px solid var(--line);border-radius:12px}table{border-collapse:separate;border-spacing:0;min-width:1900px;width:100%}th,td{padding:9px 10px;border-right:1px solid #f1f1f1;border-bottom:1px solid var(--line);white-space:nowrap;font-size:12px}th{position:sticky;top:0;background:#f5f3ff;color:#4c1d95;z-index:2}tbody tr:hover{background:#faf8ff}
+.columns{display:flex;gap:8px;flex-wrap:wrap;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fafafa}.columns label{font-size:12px;background:#fff;border:1px solid var(--line);padding:6px 8px;border-radius:8px}
+.modal{display:none;position:fixed;inset:0;background:#11182799;z-index:50;padding:20px}.modal.show{display:flex;align-items:flex-start;justify-content:center}.modal-box{background:#fff;width:min(760px,100%);border-radius:16px;padding:18px;margin-top:4vh}.modal-head{display:flex;justify-content:space-between;align-items:center}.store-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px}
+.notice{padding:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;margin:10px 0}
+.config-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.config-box{border:1px solid var(--line);border-radius:13px;padding:16px;background:#fafafa}
+.config-box h3{margin:0 0 7px;color:#4c1d95}
+.config-box p{color:var(--muted);font-size:13px;line-height:1.5;min-height:40px}
+.danger-zone{border-color:#fecaca;background:#fff7f7}
+.file-hidden{display:none}
+@media(max-width:800px){.config-grid{grid-template-columns:1fr}}
+.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.subtab{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:9px;font-weight:700;cursor:pointer}.subtab.active{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}.subview{display:none}.subview.active{display:block}.import-note{font-size:12px;color:var(--muted);margin-top:7px}.product-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.product-kpi{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fafafa}.product-kpi b{display:block;color:#5b21b6;font-size:20px}.product-kpi span{font-size:12px;color:var(--muted)}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.product-kpis{grid-template-columns:1fr}}
+.product-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.pagination{display:flex;gap:8px;align-items:center}.pagination .btn{padding:8px 12px}
+.page-size{width:auto;min-width:90px}
+.progress{height:10px;background:#ede9fe;border-radius:999px;overflow:hidden;margin-top:10px;display:none}
+.progress.show{display:block}.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--p),var(--p2));transition:width .15s}
+.busy{pointer-events:none;opacity:.65}
+</style>
+</head>
+<body>
+<header><h1>Fornecedor Produto</h1><div>Base geral consolidada e base individual por cliente</div></header>
+<main>
+<section class="card">
+  <div class="tabs">
+    <button class="tab active" data-view="importView">Importar XML</button>
+    <button class="tab" data-view="generalView">Base Geral</button>
+    <button class="tab" data-view="clientView">Base por Cliente</button>
+    <button class="tab" data-view="clientsView">Clientes e Lojas</button>
+    <button class="tab" data-view="settingsView">Configurações</button>
+  </div>
+</section>
+
+<section id="importView" class="view active">
+  <div class="card">
+    <div class="toolbar">
+      <div class="field"><label>Cliente ativo</label><select id="activeClient"></select></div>
+      <button class="btn secondary" id="goClients">Cadastrar cliente/loja</button>
+    </div>
+  </div>
+  <div class="card">
+    <div id="drop" class="drop">
+      <h2>Importar XML de NF-e</h2>
+      <p>Os dados serão gravados simultaneamente na Base Geral e na Base do Cliente.</p>
+      <label for="file" class="btn primary">Selecionar XML</label>
+      <input id="file" type="file" accept=".xml" multiple style="display:none">
+      <div id="status" class="status">Nenhum arquivo importado.</div>
+    </div>
+  </div>
+</section>
+
+<section id="generalView" class="view">
+  <div class="card">
+    <h2>Base Geral Consolidada</h2>
+    <p style="color:#6b7280">Regra: para o mesmo produto e fornecedor com CNPJ igual ou da mesma raiz, exibe apenas um registro. Fornecedores com raízes diferentes permanecem separados.</p>
+    <div class="stats">
+      <div class="stat"><b id="gRaw">0</b><span>Registros históricos</span></div>
+      <div class="stat"><b id="gUnique">0</b><span>Mix consolidado</span></div>
+      <div class="stat"><b id="gSuppliers">0</b><span>Fornecedores</span></div>
+      <div class="stat"><b id="gClients">0</b><span>Clientes</span></div>
+      <div class="stat"><b id="gStores">0</b><span>Lojas</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="toolbar">
+      <div class="field"><label>Pesquisar</label><input id="gSearch" placeholder="Produto, GTIN, fornecedor, cliente..."></div>
+      <div class="field"><label>Fornecedor</label><select id="gSupplierFilter"></select></div>
+      <div class="field"><label>Cliente</label><select id="gClientFilter"></select></div>
+      <button id="gCsv" class="btn secondary">Exportar CSV</button>
+    </div>
+    <h3>Colunas visíveis</h3><div id="gColumns" class="columns"></div>
+  </div>
+  <div class="card"><div class="table-wrap"><table><thead id="gHead"></thead><tbody id="gBody"></tbody></table></div></div>
+</section>
+
+<section id="clientView" class="view">
+  <div class="card">
+    <h2>Base por Cliente</h2>
+    <div class="toolbar">
+      <div class="field"><label>Cliente</label><select id="cClient"></select></div>
+      <div class="field"><label>Loja</label><select id="cStore"></select></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="subtabs">
+      <button class="subtab active" data-subview="clientNfeView">Dados da Nota Fiscal</button>
+      <button class="subtab" data-subview="clientProductsView">Dados dos Produtos</button>
+    </div>
+
+    <div id="clientNfeView" class="subview active">
+      <div class="toolbar">
+        <div class="field"><label>Pesquisar nos dados da NF</label><input id="cSearch" placeholder="Produto, GTIN, fornecedor..."></div>
+        <button id="cCsv" class="btn secondary">Exportar CSV</button>
+      </div>
+      <p style="color:#6b7280">A mesma regra de consolidação é aplicada dentro do cliente: produtos iguais do mesmo fornecedor ou da mesma raiz aparecem apenas uma vez.</p>
+      <h3>Colunas visíveis</h3><div id="cColumns" class="columns"></div>
+      <div class="table-wrap" style="margin-top:14px"><table><thead id="cHead"></thead><tbody id="cBody"></tbody></table></div>
+    </div>
+
+    <div id="clientProductsView" class="subview">
+      <div class="toolbar">
+        <div class="field"><label>Pesquisar na base de produtos</label><input id="pSearch" placeholder="Código interno, descrição, GTIN/PLU ou status..."></div>
+        <input id="productFile" type="file" accept=".csv,.xlsx,.xls,.xlsm" style="display:none">
+        <button id="selectProductFile" class="btn primary">Importar planilha de produtos</button>
+        <button id="pCsv" class="btn secondary">Exportar produtos CSV</button>
+      </div>
+      <div class="import-note">Formatos aceitos: CSV, XLS, XLSX e XLSM. O APP identifica as colunas pelos nomes; se não localizar, usa as colunas A até E.</div>
+      <div class="product-kpis">
+        <div class="product-kpi"><b id="pTotal">0</b><span>Produtos cadastrados</span></div>
+        <div class="product-kpi"><b id="pActive">0</b><span>Produtos ativos</span></div>
+        <div class="product-kpi"><b id="pInactive">0</b><span>Produtos inativos</span></div>
+      </div>
+      <div id="productStatus" class="status"></div>
+      <div class="table-wrap" style="margin-top:14px"><table style="min-width:1000px"><thead><tr><th>CÓDIGO INTERNO</th><th>DESCRIÇÃO</th><th>GTIN/PLU PRINCIPAL</th><th>GTINS/PLUS</th><th>STATUS</th></tr></thead><tbody id="pBody"></tbody></table></div>
+      <div id="productProgress" class="progress"><div></div></div>
+      <div class="product-footer">
+        <div id="pResultInfo" class="status">Nenhum produto carregado.</div>
+        <div class="pagination">
+          <label>Linhas:</label>
+          <select id="pPageSize" class="page-size"><option>25</option><option selected>50</option><option>100</option><option>250</option></select>
+          <button id="pPrev" class="btn ghost">Anterior</button>
+          <span id="pPageInfo">Página 1</span>
+          <button id="pNext" class="btn ghost">Próxima</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="clientsView" class="view">
+  <div class="card">
+    <div class="toolbar"><button id="newClient" class="btn primary">Novo cliente</button></div>
+    <div id="clientsList"></div>
+  </div>
+</section>
+
+<section id="settingsView" class="view">
+  <div class="card">
+    <h2>Configurações</h2>
+    <p style="color:#6b7280">
+      Gerencie o backup completo do APP, restaure uma base anterior e extraia a configuração
+      ou o código-fonte para reutilização em outros projetos.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="config-grid">
+      <div class="config-box">
+        <h3>Exportar backup completo</h3>
+        <p>
+          Gera um arquivo JSON com clientes, lojas, logos, todos os XMLs já processados,
+          registros históricos e preferências do APP.
+        </p>
+        <button id="exportBackup" class="btn primary">Exportar backup</button>
+      </div>
+
+      <div class="config-box">
+        <h3>Importar backup</h3>
+        <p>
+          Restaura todos os dados cadastrados. A importação substitui a base atual
+          após confirmação.
+        </p>
+        <input id="backupFile" class="file-hidden" type="file" accept=".json,application/json">
+        <button id="selectBackup" class="btn secondary">Selecionar backup</button>
+      </div>
+
+      <div class="config-box">
+        <h3>Exportar configuração do APP</h3>
+        <p>
+          Gera um JSON técnico com nome do sistema, versão, linguagem, estrutura das colunas,
+          regras de consolidação e chaves utilizadas no armazenamento local.
+        </p>
+        <button id="exportConfig" class="btn secondary">Exportar configuração</button>
+      </div>
+
+      <div class="config-box">
+        <h3>Extrair código-fonte</h3>
+        <p>
+          Baixa uma cópia completa do HTML, CSS e JavaScript deste APP para utilizar
+          como base em outro aplicativo.
+        </p>
+        <button id="exportSource" class="btn secondary">Baixar código HTML</button>
+      </div>
+
+      <div class="config-box danger-zone">
+        <h3>Limpar todos os dados</h3>
+        <p>
+          Exclui clientes, lojas, logos, histórico de produtos e preferências salvas
+          neste navegador.
+        </p>
+        <button id="clearDatabase" class="btn ghost">Limpar banco de dados</button>
+      </div>
+    </div>
+    <div id="settingsStatus" class="status"></div>
+  </div>
+</section>
+
+</main>
+
+<div id="clientModal" class="modal"><div class="modal-box">
+  <div class="modal-head"><h2 id="clientTitle">Cliente</h2><button class="btn ghost" id="closeClient">Fechar</button></div>
+  <input id="clientId" type="hidden">
+  <div class="field"><label>Nome do cliente</label><input id="clientName"></div>
+  <div class="field" style="margin-top:10px"><label>Logo do cliente</label><input id="clientLogo" type="file" accept="image/*"></div>
+  <h3>Lojas</h3><div id="storesEditor"></div>
+  <button id="addStore" class="btn secondary" style="margin-top:10px">Adicionar loja</button>
+  <div class="toolbar" style="justify-content:flex-end;margin-top:16px"><button id="saveClient" class="btn primary">Salvar</button></div>
+</div></div>
+
+<div id="unknownModal" class="modal"><div class="modal-box">
+  <h2>CNPJ da loja não cadastrado</h2><div id="unknownText" class="notice"></div>
+  <div class="field"><label>Cliente</label><select id="unknownClient"></select></div>
+  <div class="field"><label>Nome da loja</label><input id="unknownStore"></div>
+  <div class="field"><label>CNPJ</label><input id="unknownCnpj" readonly></div>
+  <div class="toolbar" style="justify-content:flex-end;margin-top:16px"><button id="cancelUnknown" class="btn ghost">Cancelar</button><button id="saveUnknown" class="btn primary">Incluir e continuar</button></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const DBKEY='fornecedor_produto_db_v3';
+let db=JSON.parse(localStorage.getItem(DBKEY)||'{"clients":[],"records":[]}');
+const legacyProductsByClient=db.productsByClient||{};
+delete db.productsByClient;
+const PRODUCT_DB_NAME='fornecedor_produto_catalogo_v1';
+const PRODUCT_DB_VERSION=2;
+const PRODUCT_STORE='products';
+let productCache=new Map();
+let productDbPromise=null;
+let productPage=1;
+let productSearchTimer=null;
+let productRenderToken=0;
+const PRODUCT_BATCH_SIZE=750;
+let activeClientId=localStorage.getItem('fp_active_client')||'';
+let pending=null,logoData='';
+const cols=[
+['CNPJ_EMITENTE','CNPJ EMIT'],
+['FORNECEDOR','FORNECEDOR'],
+['CLIENTE','CLIENTE'],
+['LOJA','LOJA'],
+['CNPJ_LOJA','CNPJ DEST'],
+['NUMERO_NFE','Nº NF'],
+['COD_REFERENCIA_NFE','COD REF NFE'],
+['GTIN','GTIN'],
+['DS_COMPLETA','DESCRIÇÃO'],
+['UNIDADE_COMERCIAL','UN'],
+['FATOR','FATOR'],
+['QUANTIDADE_UNITARIA','QUANT UNIT'],
+['VALOR_UNITARIO','VL UNIT'],
+['DUN14','DUN14'],
+['UNIDADE_TRIBUTAVEL','UNIT TRIB'],
+['QUANTIDADE_CAIXA','QUANT CX'],
+['VALOR_UNITARIO_CAIXA','VL UNIT CX']
+];
+const APP_VERSION='11.0';
+const SETTINGS_KEY='fornecedor_produto_preferencias_v4';
+let savedSettings=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}');
+let allowedCols=new Set(cols.map(c=>c[0]));
+let gVisible=new Set((savedSettings.gVisible||cols.map(c=>c[0])).filter(c=>allowedCols.has(c)));
+if(!savedSettings.gVisible || !savedSettings.gVisible.includes('FATOR'))gVisible.add('FATOR');
+let cVisible=new Set((savedSettings.cVisible||cols.map(c=>c[0])).filter(c=>allowedCols.has(c)));
+if(!savedSettings.cVisible || !savedSettings.cVisible.includes('FATOR'))cVisible.add('FATOR');
+function saveSettings(){
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify({
+    gVisible:[...gVisible],cVisible:[...cVisible],activeClientId
+  }));
+}
+const clean=v=>String(v||'').replace(/\D/g,'');
+const raiz=v=>clean(v).slice(0,8);
+const fmt=v=>{let n=clean(v);return n.length===14?n.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5'):n};
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmtInt=v=>{
+  const n=Number(v||0);
+  return Number.isFinite(n)?Math.round(n).toLocaleString('pt-BR'):'';
+};
+const fmtMoney=v=>{
+  const n=Number(v||0);
+  return Number.isFinite(n)?n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+};
+function save(){delete db.productsByClient;localStorage.setItem(DBKEY,JSON.stringify(db));saveSettings();renderAll()}
+
+function textHash(value){
+ let hash=2166136261;
+ const str=String(value||'');
+ for(let i=0;i<str.length;i++){
+   hash^=str.charCodeAt(i);
+   hash=Math.imul(hash,16777619);
+ }
+ return (hash>>>0).toString(16).padStart(8,'0');
+}
+
+function getText(node,name){if(!node)return'';let e=[...node.getElementsByTagName('*')].find(x=>x.localName===name);return e?.textContent?.trim()||''}
+
+function extractFactor(description,uCom,uTrib){
+ const desc=String(description||'').toUpperCase()
+   .normalize('NFD').replace(/[\u0300-\u036f]/g,' ')
+   .replace(/\s+/g,' ').trim();
+ const unit=String(uCom||'').toUpperCase().trim();
+ const trib=String(uTrib||'').toUpperCase().trim();
+
+ // Quando a unidade comercial já é unidade simples, não cria fator artificial.
+ const simpleUnits=new Set(['UN','UND','UNID','PC','PÇ','PCA','EA']);
+ const packageUnits=new Set([
+   'CX','CAIXA','FD','FDO','FARDO','PCT','PACOTE','PACK','DISPLAY','DP',
+   'KIT','CJ','CONJ','BANDEJA','BDJ','SACO','SC','CARTELA','CT'
+ ]);
+
+ const patterns=[
+   // Ex.: 8X362ML, 12 X 1L, 24x350G.
+   /(?:^|[\s\-\/])(\d{1,3})\s*[X×]\s*\d+(?:[.,]\d+)?\s*(?:ML|L|LT|G|GR|KG|MG|CL)(?:\b|$)/i,
+
+   // Ex.: CX C/12, FARDO COM 6, PCT C 10.
+   /\b(?:CX|CAIXA|FD|FDO|FARDO|PCT|PACOTE|PACK|DISPLAY|DP|KIT|CJ|CONJ|BANDEJA|BDJ|SACO|SC|CARTELA|CT)\s*(?:C\/|COM|C)?\s*(\d{1,3})\b/i,
+
+   // Ex.: C/12 UN, COM 6 UNIDADES.
+   /\b(?:C\/|COM)\s*(\d{1,3})\s*(?:UN|UND|UNID|UNIDADES|PCS|PECAS)?\b/i,
+
+   // Ex.: PACK 6UN, FARDO 12 UND.
+   /\b(?:PACK|FARDO|FDO|FD|CAIXA|CX|PACOTE|PCT)\s*(\d{1,3})\s*(?:UN|UND|UNID|UNIDADES|PCS)?\b/i,
+
+   // Ex.: 6UN X 500ML.
+   /\b(\d{1,3})\s*(?:UN|UND|UNID|UNIDADES)\s*[X×]\s*\d+(?:[.,]\d+)?\s*(?:ML|L|LT|G|GR|KG)\b/i
+ ];
+
+ for(const rx of patterns){
+   const m=desc.match(rx);
+   if(m){
+     const n=parseInt(m[1],10);
+     if(Number.isInteger(n) && n>1 && n<=999)return n;
+   }
+ }
+
+ // Só tenta padrões genéricos quando a unidade comercial representa embalagem.
+ if(packageUnits.has(unit) || (!simpleUnits.has(unit) && unit && unit!==trib)){
+   const generic=[
+     /\b(\d{1,3})\s*(?:UN|UND|UNID|UNIDADES|PCS|PECAS)\b/i,
+     /\b(?:QTD|QTDE|QUANT)\s*[:\-]?\s*(\d{1,3})\b/i
+   ];
+   for(const rx of generic){
+     const m=desc.match(rx);
+     if(m){
+       const n=parseInt(m[1],10);
+       if(Number.isInteger(n) && n>1 && n<=999)return n;
+     }
+   }
+ }
+
+ return 1;
+}
+
+function productKey(r){return [r.RAIZ_CNPJ_EMITENTE,r.GTIN||r.COD_REFERENCIA_NFE||r.DS_COMPLETA].join('|').toLowerCase()}
+function consolidate(list){let m=new Map();for(const r of list){let k=productKey(r);if(!m.has(k))m.set(k,r);else{let old=m.get(k);if((r.DATA_EMISSAO||'')>(old.DATA_EMISSAO||''))m.set(k,r)}}return [...m.values()]}
+function findStore(cnpj){let n=clean(cnpj);for(const client of db.clients){let store=(client.stores||[]).find(s=>clean(s.cnpj)===n);if(store)return{client,store}}return null}
+function parse(xml,name){
+ let doc=new DOMParser().parseFromString(xml,'application/xml');if(doc.querySelector('parsererror'))throw Error('XML inválido: '+name);
+ let inf=[...doc.getElementsByTagName('*')].find(e=>e.localName==='infNFe');if(!inf)throw Error('NF-e não encontrada');
+ let ide=[...inf.children].find(e=>e.localName==='ide'),emit=[...inf.children].find(e=>e.localName==='emit'),dest=[...inf.children].find(e=>e.localName==='dest');
+ let chave=(inf.getAttribute('Id')||'').replace(/^NFe/,'');
+ let importKey=chave?('NFE:'+chave):('XML:'+textHash(xml));
+ let meta={file:name,chave,importKey,cnpjEmit:getText(emit,'CNPJ'),fornecedor:getText(emit,'xNome'),cnpjDest:getText(dest,'CNPJ'),destName:getText(dest,'xNome'),nfe:getText(ide,'nNF'),data:getText(ide,'dhEmi')};
+ let dets=[...inf.getElementsByTagName('*')].filter(e=>e.localName==='det');return{meta,dets}
+}
+function makeRows(parsed,match){return parsed.dets.map((d,i)=>{let p=[...d.children].find(e=>e.localName==='prod');return{
+ ID:crypto.randomUUID(),IMPORT_KEY:parsed.meta.importKey,CNPJ_EMITENTE:parsed.meta.cnpjEmit,RAIZ_CNPJ_EMITENTE:raiz(parsed.meta.cnpjEmit),FORNECEDOR:parsed.meta.fornecedor,
+ CLIENTE_ID:match.client.id,CLIENTE:match.client.name,LOJA:match.store.name,CNPJ_LOJA:parsed.meta.cnpjDest,NUMERO_NFE:parsed.meta.nfe,DATA_EMISSAO:parsed.meta.data,
+ ITEM:d.getAttribute('nItem')||String(i+1),COD_REFERENCIA_NFE:getText(p,'cProd'),GTIN:getText(p,'cEAN'),DS_COMPLETA:getText(p,'xProd'),
+ UNIDADE_COMERCIAL:getText(p,'uCom'),FATOR:extractFactor(getText(p,'xProd'),getText(p,'uCom'),getText(p,'uTrib')),QUANTIDADE_UNITARIA:getText(p,'qCom'),VALOR_UNITARIO:getText(p,'vUnCom'),DUN14:getText(p,'cEANTrib'),
+ UNIDADE_TRIBUTAVEL:getText(p,'uTrib'),QUANTIDADE_CAIXA:getText(p,'qTrib'),VALOR_UNITARIO_CAIXA:getText(p,'vUnTrib')
+}})}
+async function importFiles(files){
+ let total=0,ignored=0;
+ try{
+  for(const f of files){
+   let parsed=parse(await f.text(),f.name),match=findStore(parsed.meta.cnpjDest);
+   if(!match){await askUnknown(parsed.meta);match=findStore(parsed.meta.cnpjDest);if(!match)throw Error('Importação cancelada')}
+   const importKey=parsed.meta.importKey;
+   const alreadyImported=db.records.some(r=>r.IMPORT_KEY===importKey);
+   if(alreadyImported){ignored++;continue}
+   db.records.push(...makeRows(parsed,match));
+   total+=parsed.dets.length;
+   activeClientId=match.client.id;
+   localStorage.setItem('fp_active_client',activeClientId);
+  }
+  save();
+  $('#status').className=total?'status ok':'status warn';
+  $('#status').textContent=total
+    ?`${total} item(ns) importado(s). ${ignored?ignored+' XML(s) repetido(s) ignorado(s).':''}`
+    :`${ignored} XML(s) com a mesma chave da NF-e ou conteúdo idêntico já havia(m) sido importado(s).`;
+ }catch(e){$('#status').className='status warn';$('#status').textContent=e.message}
+}
+function askUnknown(meta){return new Promise((resolve,reject)=>{pending={meta,resolve,reject};$('#unknownText').innerHTML=`O CNPJ <b>${fmt(meta.cnpjDest)}</b> não está cadastrado.`;$('#unknownStore').value=meta.destName||'';$('#unknownCnpj').value=fmt(meta.cnpjDest);$('#unknownClient').value=activeClientId;$('#unknownModal').classList.add('show')})}
+function selectOptions(sel,arr,placeholder){sel.innerHTML=`<option value="">${placeholder}</option>`+arr.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('')}
+
+
+function updateFactorsForExistingRecords(){
+ let changed=false;
+ for(const r of db.records){
+   const calculated=extractFactor(r.DS_COMPLETA,r.UNIDADE_COMERCIAL,r.UNIDADE_TRIBUTAVEL);
+   if(Number(r.FATOR)!==calculated){
+     r.FATOR=calculated;
+     changed=true;
+   }
+ }
+ if(changed)localStorage.setItem(DBKEY,JSON.stringify(db));
+}
+
+function removeExactHistoricalDuplicates(){
+ const seen=new Set(),cleaned=[];
+ for(const r of db.records){
+  // Registros antigos sem IMPORT_KEY são preservados para evitar excluir dados válidos.
+  if(!r.IMPORT_KEY){cleaned.push(r);continue}
+  const rowKey=[r.IMPORT_KEY,r.ITEM||'',r.COD_REFERENCIA_NFE||'',r.GTIN||'',r.DS_COMPLETA||''].join('|');
+  if(seen.has(rowKey))continue;
+  seen.add(rowKey);cleaned.push(r);
+ }
+ if(cleaned.length!==db.records.length){
+  db.records=cleaned;
+  localStorage.setItem(DBKEY,JSON.stringify(db));
+ }
+}
+
+
+
+
+function openProductDB(){
+ if(productDbPromise)return productDbPromise;
+ productDbPromise=new Promise((resolve,reject)=>{
+  const req=indexedDB.open(PRODUCT_DB_NAME,PRODUCT_DB_VERSION);
+  req.onupgradeneeded=()=>{
+   const idb=req.result;
+   let store;
+   if(!idb.objectStoreNames.contains(PRODUCT_STORE))store=idb.createObjectStore(PRODUCT_STORE,{keyPath:'ID'});
+   else store=req.transaction.objectStore(PRODUCT_STORE);
+   if(!store.indexNames.contains('CLIENTE_ID'))store.createIndex('CLIENTE_ID','CLIENTE_ID',{unique:false});
+   if(!store.indexNames.contains('CLIENTE_KEY'))store.createIndex('CLIENTE_KEY',['CLIENTE_ID','PRODUCT_KEY'],{unique:true});
+   if(!store.indexNames.contains('CLIENTE_STATUS'))store.createIndex('CLIENTE_STATUS',['CLIENTE_ID','STATUS_NORM'],{unique:false});
+   if(!idb.objectStoreNames.contains('product_meta'))idb.createObjectStore('product_meta',{keyPath:'CLIENTE_ID'});
+  };
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error||Error('Não foi possível abrir o banco de produtos.'));
+ });
+ return productDbPromise;
+}
+function idbRequest(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+function txDone(tx){return new Promise((resolve,reject)=>{tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})}
+function normalizeProductRecord(clientId,p){
+ const key=p.PRODUCT_KEY||normalizeHeader(p.CODIGO_INTERNO)||normalizeHeader(p.GTIN_PRINCIPAL)||normalizeHeader(p.DESCRICAO);
+ return {...p,ID:p.ID||clientId+'|'+key,CLIENTE_ID:clientId,PRODUCT_KEY:key,
+   STATUS_NORM:normalizeHeader(p.STATUS),
+   SEARCH_NORM:normalizeHeader([p.CODIGO_INTERNO,p.DESCRICAO,p.GTIN_PRINCIPAL,p.GTINS_PLUS,p.STATUS].join(' '))};
+}
+async function getProductMeta(clientId){
+ if(!clientId)return{CLIENTE_ID:'',total:0,active:0,inactive:0};
+ const idb=await openProductDB(),tx=idb.transaction('product_meta','readonly');
+ return await idbRequest(tx.objectStore('product_meta').get(clientId))||{CLIENTE_ID:clientId,total:0,active:0,inactive:0};
+}
+async function setProductMeta(meta){
+ const idb=await openProductDB(),tx=idb.transaction('product_meta','readwrite');
+ tx.objectStore('product_meta').put(meta);await txDone(tx);
+}
+async function recalculateProductMeta(clientId){
+ const meta={CLIENTE_ID:clientId,total:0,active:0,inactive:0};
+ const idb=await openProductDB(),tx=idb.transaction(PRODUCT_STORE,'readonly');
+ const req=tx.objectStore(PRODUCT_STORE).index('CLIENTE_ID').openCursor(IDBKeyRange.only(clientId));
+ await new Promise((resolve,reject)=>{
+  req.onsuccess=e=>{const cur=e.target.result;if(!cur)return resolve();const s=normalizeHeader(cur.value.STATUS);meta.total++;if(s==='ATIVO')meta.active++;else if(s==='INATIVO')meta.inactive++;cur.continue()};
+  req.onerror=()=>reject(req.error);
+ });
+ await setProductMeta(meta);return meta;
+}
+async function getProductPage(clientId,page,pageSize,query){
+ if(!clientId)return{items:[],matches:0};
+ const q=normalizeHeader(query),offset=(page-1)*pageSize,items=[];let matches=0,skipped=0;
+ const idb=await openProductDB(),tx=idb.transaction(PRODUCT_STORE,'readonly');
+ const req=tx.objectStore(PRODUCT_STORE).index('CLIENTE_ID').openCursor(IDBKeyRange.only(clientId));
+ await new Promise((resolve,reject)=>{
+  req.onsuccess=e=>{
+   const cur=e.target.result;if(!cur)return resolve();
+   const p=cur.value,search=p.SEARCH_NORM||normalizeHeader([p.CODIGO_INTERNO,p.DESCRICAO,p.GTIN_PRINCIPAL,p.GTINS_PLUS,p.STATUS].join(' '));
+   if(!q||search.includes(q)){matches++;if(skipped<offset)skipped++;else if(items.length<pageSize)items.push(p)}
+   cur.continue();
+  };
+  req.onerror=()=>reject(req.error);
+ });
+ return{items,matches};
+}
+async function getAllProducts(){
+ const idb=await openProductDB(),tx=idb.transaction(PRODUCT_STORE,'readonly');
+ return await idbRequest(tx.objectStore(PRODUCT_STORE).getAll())||[];
+}
+async function replaceAllProducts(items){
+ const idb=await openProductDB();
+ let tx=idb.transaction([PRODUCT_STORE,'product_meta'],'readwrite');
+ tx.objectStore(PRODUCT_STORE).clear();tx.objectStore('product_meta').clear();await txDone(tx);
+ const metas=new Map();
+ for(let i=0;i<(items||[]).length;i+=PRODUCT_BATCH_SIZE){
+  const chunk=items.slice(i,i+PRODUCT_BATCH_SIZE);
+  tx=idb.transaction(PRODUCT_STORE,'readwrite');const store=tx.objectStore(PRODUCT_STORE);
+  for(const raw of chunk){
+   const p=normalizeProductRecord(raw.CLIENTE_ID,raw);if(!p.PRODUCT_KEY)continue;store.put(p);
+   if(!metas.has(p.CLIENTE_ID))metas.set(p.CLIENTE_ID,{CLIENTE_ID:p.CLIENTE_ID,total:0,active:0,inactive:0});
+   const m=metas.get(p.CLIENTE_ID);m.total++;if(p.STATUS_NORM==='ATIVO')m.active++;else if(p.STATUS_NORM==='INATIVO')m.inactive++;
+  }
+  await txDone(tx);await new Promise(r=>setTimeout(r,0));
+ }
+ for(const meta of metas.values())await setProductMeta(meta);
+}
+async function clearAllProducts(){await replaceAllProducts([])}
+async function migrateLegacyProducts(){
+ const entries=Object.entries(legacyProductsByClient||{});if(!entries.length)return;
+ const idb=await openProductDB(),tx=idb.transaction(PRODUCT_STORE,'readonly');
+ if(await idbRequest(tx.objectStore(PRODUCT_STORE).count()))return;
+ const items=[];for(const [clientId,products] of entries)for(const p of products||[])items.push(normalizeProductRecord(clientId,p));
+ if(items.length)await replaceAllProducts(items);
+ delete db.productsByClient;localStorage.setItem(DBKEY,JSON.stringify(db));
+}
+function normalizeHeader(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+}
+function findHeaderIndex(headers,aliases,fallback){
+ const normalized=headers.map(normalizeHeader);
+ for(const alias of aliases){const idx=normalized.indexOf(normalizeHeader(alias));if(idx>=0)return idx}
+ return fallback;
+}
+function cellText(value){
+ if(value===null||value===undefined)return'';
+ if(typeof value==='number')return Number.isInteger(value)?String(value):String(value);
+ return String(value).trim();
+}
+
+async function currentClientProducts(){
+ const clientId=$('#cClient').value;if(!clientId)return[];
+ const idb=await openProductDB(),tx=idb.transaction(PRODUCT_STORE,'readonly');
+ return await idbRequest(tx.objectStore(PRODUCT_STORE).index('CLIENTE_ID').getAll(clientId))||[];
+}
+function setProductProgress(percent,message=''){
+ const box=$('#productProgress'),bar=box.querySelector('div');
+ if(percent===null){box.classList.remove('show');bar.style.width='0';return}
+ box.classList.add('show');bar.style.width=Math.max(0,Math.min(100,percent))+'%';
+ if(message){$('#productStatus').className='status';$('#productStatus').textContent=message}
+}
+async function renderProducts(){
+ const token=++productRenderToken,clientId=$('#cClient').value,pageSize=Number($('#pPageSize')?.value||50),q=$('#pSearch')?.value||'';
+ if(!clientId){$('#pBody').innerHTML='<tr><td colspan="5" style="padding:30px;text-align:center">Selecione um cliente.</td></tr>';return}
+ try{
+  $('#pBody').innerHTML='<tr><td colspan="5" style="padding:30px;text-align:center">Carregando...</td></tr>';
+  const [meta,result]=await Promise.all([getProductMeta(clientId),getProductPage(clientId,productPage,pageSize,q)]);
+  if(token!==productRenderToken)return;
+  const maxPage=Math.max(1,Math.ceil(result.matches/pageSize));
+  if(productPage>maxPage){productPage=maxPage;return renderProducts()}
+  $('#pTotal').textContent=meta.total||0;$('#pActive').textContent=meta.active||0;$('#pInactive').textContent=meta.inactive||0;
+  $('#pBody').innerHTML=result.items.length?result.items.map(p=>`<tr><td>${esc(p.CODIGO_INTERNO)}</td><td>${esc(p.DESCRICAO)}</td><td>${esc(p.GTIN_PRINCIPAL)}</td><td>${esc(p.GTINS_PLUS)}</td><td>${esc(p.STATUS)}</td></tr>`).join(''):'<tr><td colspan="5" style="padding:30px;text-align:center">Nenhum produto encontrado.</td></tr>';
+  $('#pPageInfo').textContent=`Página ${productPage} de ${maxPage}`;$('#pResultInfo').textContent=q?`${result.matches} produto(s) encontrado(s).`:`${meta.total||0} produto(s) cadastrados.`;
+  $('#pPrev').disabled=productPage<=1;$('#pNext').disabled=productPage>=maxPage;
+ }catch(err){$('#productStatus').className='status warn';$('#productStatus').textContent='Erro ao carregar produtos: '+err.message}
+}
+async function readProductSpreadsheet(file){
+ const ext=(file.name.split('.').pop()||'').toLowerCase();let matrix=[];
+ if(ext==='csv'){
+   const text=await file.text();
+   const delimiter=(text.split(/\r?\n/)[0].match(/;/g)||[]).length>(text.split(/\r?\n/)[0].match(/,/g)||[]).length?';':',';
+   matrix=text.split(/\r?\n/).filter(line=>line.trim()).map(line=>{
+     const out=[];let cur='',quoted=false;
+     for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){cur+='"';i++}else quoted=!quoted}else if(ch===delimiter&&!quoted){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out;
+   });
+ }else{
+   if(typeof XLSX==='undefined')throw Error('A biblioteca de leitura de Excel não foi carregada. Verifique a conexão com a internet e abra o APP novamente.');
+   const data=await file.arrayBuffer(),wb=XLSX.read(data,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];
+   matrix=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
+ }
+ if(!matrix.length)throw Error('A planilha está vazia.');
+ const headers=matrix[0].map(cellText);
+ const idx={
+  code:findHeaderIndex(headers,['Código Interno','Codigo Interno','CODIGO_INTERNO','COD INTERNO'],0),
+  desc:findHeaderIndex(headers,['Descrição','Descricao','DS_COMPLETA','DESCRICAO'],1),
+  main:findHeaderIndex(headers,['GTIN/PLU Principal','GTIN PLU Principal','GTIN Principal','PLU Principal'],2),
+  others:findHeaderIndex(headers,['GTINS/PLUS','GTINS PLUS','GTINs/PLUs','GTINS PLU'],3),
+  status:findHeaderIndex(headers,['STATUS','Situação','Situacao'],4)
+ };
+ return matrix.slice(1).filter(r=>r.some(v=>cellText(v)!=='')).map(r=>({
+  CODIGO_INTERNO:cellText(r[idx.code]),DESCRICAO:cellText(r[idx.desc]),GTIN_PRINCIPAL:cellText(r[idx.main]),GTINS_PLUS:cellText(r[idx.others]),STATUS:cellText(r[idx.status])
+ })).filter(p=>p.CODIGO_INTERNO||p.DESCRICAO||p.GTIN_PRINCIPAL);
+}
+async function mergeClientProducts(clientId,items){
+ const idb=await openProductDB();let inserted=0,updated=0,processed=0,totalItems=items.length;
+ for(let start=0;start<totalItems;start+=PRODUCT_BATCH_SIZE){
+  const chunk=items.slice(start,start+PRODUCT_BATCH_SIZE);
+  const tx=idb.transaction(PRODUCT_STORE,'readwrite'),store=tx.objectStore(PRODUCT_STORE),idx=store.index('CLIENTE_KEY');
+  for(const raw of chunk){
+   const p=normalizeProductRecord(clientId,raw);if(!p.PRODUCT_KEY)continue;
+   const exists=await idbRequest(idx.getKey([clientId,p.PRODUCT_KEY]));
+   exists!==undefined?updated++:inserted++;store.put(p);processed++;
+  }
+  await txDone(tx);
+  setProductProgress(Math.round((processed/Math.max(1,totalItems))*100),`Gravando produtos: ${processed.toLocaleString('pt-BR')} de ${totalItems.toLocaleString('pt-BR')}...`);
+  await new Promise(r=>setTimeout(r,0));
+ }
+ const meta=await recalculateProductMeta(clientId);setProductProgress(null);
+ return{inserted,updated,total:meta.total};
+}
+function renderAll(){
+ selectOptions($('#activeClient'),db.clients.map(c=>({value:c.id,label:c.name})),'Selecione um cliente');$('#activeClient').value=activeClientId;
+ selectOptions($('#unknownClient'),db.clients.map(c=>({value:c.id,label:c.name})),'Selecione');
+ selectOptions($('#cClient'),db.clients.map(c=>({value:c.id,label:c.name})),'Selecione um cliente');
+ let suppliers=[...new Map(db.records.map(r=>[r.RAIZ_CNPJ_EMITENTE,{value:r.RAIZ_CNPJ_EMITENTE,label:r.FORNECEDOR+' - '+r.RAIZ_CNPJ_EMITENTE}])).values()];
+ selectOptions($('#gSupplierFilter'),suppliers,'Todos os fornecedores');selectOptions($('#gClientFilter'),db.clients.map(c=>({value:c.id,label:c.name})),'Todos os clientes');
+ renderClients();renderGeneral();renderClientBase()
+}
+function renderColumnPicker(id,set,renderFn){$(id).innerHTML=cols.map(([k,l])=>`<label><input type="checkbox" data-col="${k}" ${set.has(k)?'checked':''}> ${l}</label>`).join('');$(id).querySelectorAll('input').forEach(i=>i.onchange=()=>{i.checked?set.add(i.dataset.col):set.delete(i.dataset.col);saveSettings();renderFn()})}
+function displayValue(key,value){
+ if(key.includes('CNPJ'))return fmt(value);
+ if(key==='FATOR'||key==='QUANTIDADE_UNITARIA'||key==='QUANTIDADE_CAIXA')return fmtInt(value);
+ if(key==='VALOR_UNITARIO'||key==='VALOR_UNITARIO_CAIXA')return fmtMoney(value);
+ return esc(value);
+}
+function tableRender(headId,bodyId,list,set){
+ let active=cols.filter(([k])=>set.has(k));
+ $(headId).innerHTML='<tr>'+active.map(([,l])=>`<th>${l}</th>`).join('')+'</tr>';
+ $(bodyId).innerHTML=list.length
+  ?list.map(r=>'<tr>'+active.map(([k])=>`<td>${displayValue(k,r[k])}</td>`).join('')+'</tr>').join('')
+  :`<tr><td colspan="${active.length||1}" style="padding:30px;text-align:center">Nenhum registro.</td></tr>`;
+}
+function renderGeneral(){
+ let base=consolidate(db.records),q=$('#gSearch').value.toLowerCase(),sf=$('#gSupplierFilter').value,cf=$('#gClientFilter').value;
+ let list=base.filter(r=>(!sf||r.RAIZ_CNPJ_EMITENTE===sf)&&(!cf||r.CLIENTE_ID===cf)&&(!q||Object.values(r).some(v=>String(v).toLowerCase().includes(q))));
+ $('#gRaw').textContent=db.records.length;$('#gUnique').textContent=base.length;$('#gSuppliers').textContent=new Set(db.records.map(r=>r.RAIZ_CNPJ_EMITENTE)).size;$('#gClients').textContent=new Set(db.records.map(r=>r.CLIENTE_ID)).size;$('#gStores').textContent=new Set(db.records.map(r=>r.CNPJ_LOJA)).size;
+ tableRender('#gHead','#gBody',list,gVisible)
+}
+function renderClientBase(){
+ let id=$('#cClient').value,store=$('#cStore').value,q=$('#cSearch').value.toLowerCase(),client=db.clients.find(c=>c.id===id);
+ let stores=(client?.stores||[]).map(s=>({value:clean(s.cnpj),label:s.name}));let current=$('#cStore').value;selectOptions($('#cStore'),stores,'Todas as lojas');$('#cStore').value=stores.some(s=>s.value===current)?current:'';
+ store=$('#cStore').value;let list=consolidate(db.records.filter(r=>r.CLIENTE_ID===id&&(!store||clean(r.CNPJ_LOJA)===store))).filter(r=>!q||Object.values(r).some(v=>String(v).toLowerCase().includes(q)));
+ tableRender('#cHead','#cBody',list,cVisible);if($('#clientProductsView').classList.contains('active')){productPage=1;renderProducts()}
+}
+function addStoreRow(name='',cnpj=''){let d=document.createElement('div');d.className='store-row';d.innerHTML=`<input class="sn" placeholder="Nome da loja" value="${esc(name)}"><input class="sc" placeholder="CNPJ" value="${esc(cnpj)}"><button class="btn ghost">Remover</button>`;d.querySelector('button').onclick=()=>d.remove();$('#storesEditor').appendChild(d)}
+function openClient(c=null){$('#clientId').value=c?.id||'';$('#clientName').value=c?.name||'';logoData=c?.logo||'';$('#storesEditor').innerHTML='';(c?.stores?.length?c.stores:[{}]).forEach(s=>addStoreRow(s.name,s.cnpj));$('#clientModal').classList.add('show')}
+function renderClients(){$('#clientsList').innerHTML=db.clients.map(c=>`<div class="card"><b>${esc(c.name)}</b><div style="color:#6b7280;margin:6px 0">${(c.stores||[]).map(s=>esc(s.name)+' - '+fmt(s.cnpj)).join(' | ')||'Sem lojas'}</div><button class="btn ghost edit-client" data-id="${c.id}">Editar</button></div>`).join('')||'<p>Nenhum cliente cadastrado.</p>';document.querySelectorAll('.edit-client').forEach(b=>b.onclick=()=>openClient(db.clients.find(c=>c.id===b.dataset.id)))}
+function csvValue(key,value){
+ if(key==='FATOR'||key==='QUANTIDADE_UNITARIA'||key==='QUANTIDADE_CAIXA')return String(Math.round(Number(value||0)));
+ if(key==='VALOR_UNITARIO'||key==='VALOR_UNITARIO_CAIXA')return Number(value||0).toFixed(2).replace('.',',');
+ return String(value??'');
+}
+function csvExport(list,set,name){let active=cols.filter(([k])=>set.has(k)),q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';let csv='\uFEFF'+[active.map(([,l])=>q(l)).join(';'),...list.map(r=>active.map(([k])=>q(csvValue(k,r[k]))).join(';'))].join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;a.click()}
+
+function downloadFile(filename,mime,content){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function dateStamp(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}`;
+}
+async function fullBackupObject(){
+  const products=await getAllProducts();
+  const productsByClient={};for(const p of products){(productsByClient[p.CLIENTE_ID]??=[]).push(p)}
+  return {
+    backupType:'Fornecedor Produto - Backup Completo',
+    schemaVersion:4,
+    appVersion:APP_VERSION,
+    exportedAt:new Date().toISOString(),
+    language:'HTML5, CSS3 e JavaScript puro',
+    database:{...db,productsByClient},
+    preferences:{
+      activeClientId,
+      gVisible:[...gVisible],
+      cVisible:[...cVisible]
+    }
+  };
+}
+function validateBackup(data){
+  if(!data||typeof data!=='object')throw Error('Arquivo de backup inválido.');
+  const base=data.database||data.db||data;
+  if(!base||!Array.isArray(base.clients)||!Array.isArray(base.records)){
+    throw Error('O arquivo não contém clientes e registros em formato compatível.');
+  }
+  if(!base.productsByClient)base.productsByClient={};return {base,preferences:data.preferences||{}};
+}
+function appConfigurationObject(){
+  return {
+    app:{
+      name:'Fornecedor Produto',
+      version:APP_VERSION,
+      language:'HTML5, CSS3 e JavaScript puro',
+      storage:'LocalStorage para clientes e notas; IndexedDB paginado para bases muito grandes de produtos',
+      databaseKey:DBKEY,
+      preferencesKey:SETTINGS_KEY
+    },
+    modules:[
+      'Importação de XML NF-e',
+      'Base Geral Consolidada',
+      'Base por Cliente - Dados da Nota Fiscal e Dados dos Produtos',
+      'Cadastro de Clientes e Lojas',
+      'Configurações e Backup'
+    ],
+    consolidationRule:{
+      description:'Produtos iguais do mesmo fornecedor ou de estabelecimentos com a mesma raiz de CNPJ aparecem uma única vez.',
+      supplierIdentity:'Primeiros 8 dígitos do CNPJ emitente',
+      productIdentity:'GTIN; na ausência, código de referência; na ausência, descrição completa',
+      retainedRecord:'Registro com data de emissão mais recente'
+    },
+    xmlMapping:{
+      CNPJ_EMITENTE:'emit/CNPJ',
+      FORNECEDOR:'emit/xNome',
+      CNPJ_LOJA:'dest/CNPJ',
+      NUMERO_NFE:'ide/nNF',
+      DATA_INTERNA_CONSOLIDACAO:'ide/dhEmi',
+      COD_REFERENCIA_NFE:'det/prod/cProd',
+      GTIN:'det/prod/cEAN',
+      DS_COMPLETA:'det/prod/xProd',
+      UNIDADE_COMERCIAL:'det/prod/uCom',
+      FATOR:'Interpretação inteligente de det/prod/xProd quando a unidade comercial representa caixa, fardo, pacote ou embalagem',
+      QUANTIDADE_UNITARIA:'det/prod/qCom',
+      VALOR_UNITARIO:'det/prod/vUnCom',
+      DUN14:'det/prod/cEANTrib',
+      UNIDADE_TRIBUTAVEL:'det/prod/uTrib',
+      QUANTIDADE_CAIXA:'det/prod/qTrib',
+      VALOR_UNITARIO_CAIXA:'det/prod/vUnTrib'
+    },
+    visibleColumns:cols.map(([key,label])=>({key,label})),
+    internalFields:[
+      'ID','CLIENTE_ID','RAIZ_CNPJ_EMITENTE','DATA_EMISSAO','ITEM'
+    ],
+    notes:[
+      'Raiz do CNPJ, data de emissão e item permanecem internamente para consolidação, mas não são exibidos nas bases.',
+      'O backup completo inclui logos armazenados em Base64.'
+    ]
+  };
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+function downloadFile(filename,mime,content){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function dateStamp(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}`;
+}
+async function fullBackupObject(){
+  const products=await getAllProducts();
+  const productsByClient={};for(const p of products){(productsByClient[p.CLIENTE_ID]??=[]).push(p)}
+  return {
+    backupType:'Fornecedor Produto - Backup Completo',
+    schemaVersion:4,
+    appVersion:APP_VERSION,
+    exportedAt:new Date().toISOString(),
+    language:'HTML5, CSS3 e JavaScript puro',
+    database:db,
+    preferences:{
+      activeClientId,
+      gVisible:[...gVisible],
+      cVisible:[...cVisible]
+    }
+  };
+}
+function validateBackup(data){
+  if(!data||typeof data!=='object')throw Error('Arquivo de backup inválido.');
+  const base=data.database||data.db||data;
+  if(!base||!Array.isArray(base.clients)||!Array.isArray(base.records)){
+    throw Error('O arquivo não contém clientes e registros em formato compatível.');
+  }
+  if(!base.productsByClient)base.productsByClient={};return {base,preferences:data.preferences||{}};
+}
+function appConfigurationObject(){
+  return {
+    app:{
+      name:'Fornecedor Produto',
+      version:APP_VERSION,
+      language:'HTML5, CSS3 e JavaScript puro',
+      storage:'LocalStorage para clientes e notas; IndexedDB paginado para bases muito grandes de produtos',
+      databaseKey:DBKEY,
+      preferencesKey:SETTINGS_KEY
+    },
+    modules:[
+      'Importação de XML NF-e',
+      'Base Geral Consolidada',
+      'Base por Cliente - Dados da Nota Fiscal e Dados dos Produtos',
+      'Cadastro de Clientes e Lojas',
+      'Configurações e Backup'
+    ],
+    consolidationRule:{
+      description:'Produtos iguais do mesmo fornecedor ou de estabelecimentos com a mesma raiz de CNPJ aparecem uma única vez.',
+      supplierIdentity:'Primeiros 8 dígitos do CNPJ emitente',
+      productIdentity:'GTIN; na ausência, código de referência; na ausência, descrição completa',
+      retainedRecord:'Registro com data de emissão mais recente'
+    },
+    xmlMapping:{
+      CNPJ_EMITENTE:'emit/CNPJ',
+      FORNECEDOR:'emit/xNome',
+      CNPJ_LOJA:'dest/CNPJ',
+      NUMERO_NFE:'ide/nNF',
+      DATA_INTERNA_CONSOLIDACAO:'ide/dhEmi',
+      COD_REFERENCIA_NFE:'det/prod/cProd',
+      GTIN:'det/prod/cEAN',
+      DS_COMPLETA:'det/prod/xProd',
+      UNIDADE_COMERCIAL:'det/prod/uCom',
+      FATOR:'Interpretação inteligente de det/prod/xProd quando a unidade comercial representa caixa, fardo, pacote ou embalagem',
+      QUANTIDADE_UNITARIA:'det/prod/qCom',
+      VALOR_UNITARIO:'det/prod/vUnCom',
+      DUN14:'det/prod/cEANTrib',
+      UNIDADE_TRIBUTAVEL:'det/prod/uTrib',
+      QUANTIDADE_CAIXA:'det/prod/qTrib',
+      VALOR_UNITARIO_CAIXA:'det/prod/vUnTrib'
+    },
+    visibleColumns:cols.map(([key,label])=>({key,label})),
+    internalFields:[
+      'ID','CLIENTE_ID','RAIZ_CNPJ_EMITENTE','DATA_EMISSAO','ITEM'
+    ],
+    notes:[
+      'Raiz do CNPJ, data de emissão e item permanecem internamente para consolidação, mas não são exibidos nas bases.',
+      'O backup completo inclui logos armazenados em Base64.'
+    ]
+  };
+}
+
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.view).classList.add('active')});
+$('#goClients').onclick=()=>document.querySelector('[data-view="clientsView"]').click();$('#newClient').onclick=()=>openClient();$('#closeClient').onclick=()=>$('#clientModal').classList.remove('show');$('#addStore').onclick=()=>addStoreRow();
+$('#clientLogo').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>logoData=r.result;r.readAsDataURL(f)};
+$('#saveClient').onclick=()=>{let name=$('#clientName').value.trim();if(!name)return alert('Informe o nome.');let stores=[...document.querySelectorAll('#storesEditor .store-row')].map(r=>({name:r.querySelector('.sn').value.trim(),cnpj:clean(r.querySelector('.sc').value)})).filter(s=>s.name||s.cnpj);let id=$('#clientId').value||crypto.randomUUID(),obj={id,name,logo:logoData,stores};let i=db.clients.findIndex(c=>c.id===id);i>=0?db.clients[i]=obj:db.clients.push(obj);activeClientId=id;localStorage.setItem('fp_active_client',id);$('#clientModal').classList.remove('show');save()};
+$('#saveUnknown').onclick=()=>{let c=db.clients.find(x=>x.id===$('#unknownClient').value);if(!c)return alert('Selecione o cliente.');c.stores=c.stores||[];c.stores.push({name:$('#unknownStore').value.trim()||'Loja',cnpj:clean($('#unknownCnpj').value)});$('#unknownModal').classList.remove('show');let r=pending.resolve;pending=null;save();r()};
+$('#cancelUnknown').onclick=()=>{let r=pending.reject;pending=null;$('#unknownModal').classList.remove('show');r(Error('Importação cancelada'))};
+$('#activeClient').onchange=e=>{activeClientId=e.target.value;localStorage.setItem('fp_active_client',activeClientId);saveSettings()};
+$('#file').onchange=e=>importFiles(e.target.files);let drop=$('#drop');['dragover','dragenter'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>importFiles(e.dataTransfer.files));
+['gSearch','gSupplierFilter','gClientFilter'].forEach(id=>$('#'+id).oninput=renderGeneral);['cClient','cStore','cSearch'].forEach(id=>$('#'+id).oninput=renderClientBase);
+$('#gCsv').onclick=()=>{let sf=$('#gSupplierFilter').value,cf=$('#gClientFilter').value,q=$('#gSearch').value.toLowerCase(),list=consolidate(db.records).filter(r=>(!sf||r.RAIZ_CNPJ_EMITENTE===sf)&&(!cf||r.CLIENTE_ID===cf)&&(!q||Object.values(r).some(v=>String(v).toLowerCase().includes(q))));csvExport(list,gVisible,'base_geral_fornecedor_produto.csv')};
+$('#cCsv').onclick=()=>{let id=$('#cClient').value,store=$('#cStore').value,q=$('#cSearch').value.toLowerCase(),list=consolidate(db.records.filter(r=>r.CLIENTE_ID===id&&(!store||clean(r.CNPJ_LOJA)===store))).filter(r=>!q||Object.values(r).some(v=>String(v).toLowerCase().includes(q)));csvExport(list,cVisible,'base_cliente_fornecedor_produto.csv')};
+
+
+document.querySelectorAll('.subtab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.subtab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.subview').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#'+b.dataset.subview).classList.add('active');if(b.dataset.subview==='clientProductsView'){productPage=1;renderProducts()}});
+$('#selectProductFile').onclick=()=>{if(!$('#cClient').value)return alert('Selecione um cliente antes de importar a base de produtos.');$('#productFile').click()};
+$('#productFile').onchange=async e=>{
+ const file=e.target.files[0],clientId=$('#cClient').value;if(!file||!clientId)return;
+ const section=$('#clientProductsView');section.classList.add('busy');
+ try{
+  setProductProgress(2,'Lendo a planilha. Aguarde...');
+  const items=await readProductSpreadsheet(file);
+  setProductProgress(5,`${items.length.toLocaleString('pt-BR')} produto(s) lido(s). Iniciando gravação...`);
+  const result=await mergeClientProducts(clientId,items);
+  $('#productStatus').className='status ok';
+  $('#productStatus').textContent=`Planilha processada: ${result.inserted.toLocaleString('pt-BR')} incluído(s), ${result.updated.toLocaleString('pt-BR')} atualizado(s), total ${result.total.toLocaleString('pt-BR')}.`;
+  productPage=1;renderProducts();
+ }catch(err){setProductProgress(null);$('#productStatus').className='status warn';$('#productStatus').textContent='Erro ao importar: '+err.message}
+ finally{section.classList.remove('busy');e.target.value=''}
+};
+$('#pSearch').oninput=()=>{clearTimeout(productSearchTimer);productSearchTimer=setTimeout(()=>{productPage=1;renderProducts()},300)};
+$('#pPageSize').onchange=()=>{productPage=1;renderProducts()};
+$('#pPrev').onclick=()=>{if(productPage>1){productPage--;renderProducts()}};
+$('#pNext').onclick=()=>{productPage++;renderProducts()};
+$('#pCsv').onclick=async()=>{const list=await currentClientProducts(),colsP=[['CODIGO_INTERNO','CÓDIGO INTERNO'],['DESCRICAO','DESCRIÇÃO'],['GTIN_PRINCIPAL','GTIN/PLU PRINCIPAL'],['GTINS_PLUS','GTINS/PLUS'],['STATUS','STATUS']],q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv='\uFEFF'+[colsP.map(x=>q(x[1])).join(';'),...list.map(r=>colsP.map(x=>q(r[x[0]])).join(';'))].join('\r\n');downloadFile('base_produtos_cliente.csv','text/csv;charset=utf-8',csv)};
+
+$('#selectBackup').onclick=()=>$('#backupFile').click();
+$('#backupFile').onchange=async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const parsed=JSON.parse(await file.text());
+    const restored=validateBackup(parsed);
+    if(!confirm(`O backup contém ${restored.base.clients.length} cliente(s) e ${restored.base.records.length} registro(s). Substituir toda a base atual?`)){
+      e.target.value='';return;
+    }
+    const restoredProducts=restored.base.productsByClient||{};
+    db={...restored.base};delete db.productsByClient;
+    const flatProducts=[];for(const [clientId,list] of Object.entries(restoredProducts)){for(const p of list||[]){const key=p.PRODUCT_KEY||normalizeHeader(p.CODIGO_INTERNO)||normalizeHeader(p.GTIN_PRINCIPAL)||normalizeHeader(p.DESCRICAO);if(key)flatProducts.push({...p,ID:p.ID||clientId+'|'+key,CLIENTE_ID:clientId,PRODUCT_KEY:key})}}
+    await replaceAllProducts(flatProducts);
+    activeClientId=restored.preferences.activeClientId||'';
+    gVisible=new Set((restored.preferences.gVisible||cols.map(c=>c[0])).filter(c=>allowedCols.has(c)));
+    cVisible=new Set((restored.preferences.cVisible||cols.map(c=>c[0])).filter(c=>allowedCols.has(c)));
+    localStorage.setItem('fp_active_client',activeClientId);
+    save();
+    renderColumnPicker('#gColumns',gVisible,renderGeneral);
+    renderColumnPicker('#cColumns',cVisible,renderClientBase);
+    $('#settingsStatus').className='status ok';
+    $('#settingsStatus').textContent='Backup importado com sucesso.';
+  }catch(err){
+    $('#settingsStatus').className='status warn';
+    $('#settingsStatus').textContent='Não foi possível importar: '+err.message;
+  }finally{e.target.value=''}
+};
+$('#exportBackup').onclick=async()=>{
+  const backup=await fullBackupObject();
+  downloadFile(`fornecedor_produto_backup_${dateStamp()}.json`,'application/json;charset=utf-8',JSON.stringify(backup,null,2));
+  $('#settingsStatus').className='status ok';
+  $('#settingsStatus').textContent='Backup completo exportado.';
+};
+$('#exportConfig').onclick=()=>{
+  downloadFile(`fornecedor_produto_configuracao_${dateStamp()}.json`,'application/json;charset=utf-8',JSON.stringify(appConfigurationObject(),null,2));
+  $('#settingsStatus').className='status ok';
+  $('#settingsStatus').textContent='Configuração técnica exportada.';
+};
+$('#exportSource').onclick=()=>{
+  const source='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  downloadFile(`fornecedor_produto_codigo_${dateStamp()}.html`,'text/html;charset=utf-8',source);
+  $('#settingsStatus').className='status ok';
+  $('#settingsStatus').textContent='Código-fonte HTML exportado.';
+};
+$('#clearDatabase').onclick=async()=>{
+  if(!confirm('Esta ação excluirá todos os clientes, lojas, logos e registros históricos. Deseja continuar?'))return;
+  if(!confirm('Confirme novamente: limpar definitivamente toda a base deste navegador?'))return;
+  db={clients:[],records:[]};activeClientId='';
+  await clearAllProducts();
+  gVisible=new Set(cols.map(c=>c[0]));cVisible=new Set(cols.map(c=>c[0]));
+  localStorage.removeItem(DBKEY);localStorage.removeItem(SETTINGS_KEY);localStorage.removeItem('fp_active_client');
+  renderColumnPicker('#gColumns',gVisible,renderGeneral);
+  renderColumnPicker('#cColumns',cVisible,renderClientBase);
+  renderAll();
+  $('#settingsStatus').className='status ok';
+  $('#settingsStatus').textContent='Todos os dados foram removidos.';
+};
+
+(async()=>{await migrateLegacyProducts();updateFactorsForExistingRecords();removeExactHistoricalDuplicates();renderColumnPicker('#gColumns',gVisible,renderGeneral);renderColumnPicker('#cColumns',cVisible,renderClientBase);renderAll();})();
+</script>
+</body>
+</html>
